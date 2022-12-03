@@ -1,6 +1,5 @@
 # lab2
 
-реализация шаблона CRUD
 Задание
 ![изображение](https://user-images.githubusercontent.com/90793439/205446032-19686273-b527-4051-9345-27d7a54485ed.png)
 
