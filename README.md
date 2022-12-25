@@ -9,6 +9,9 @@
 ![изображение](https://user-images.githubusercontent.com/90793439/205446385-2727c064-e3bb-43de-b820-0996cef2fe04.png)
 
 1. Пользовательский интерфейс
+![изображение](https://user-images.githubusercontent.com/90793439/209466673-43805705-d6ad-4ebe-b2ab-62637efbc1cf.png)
+Форма отправки сообщений
+![изображение](https://user-images.githubusercontent.com/90793439/209467688-caf85cb0-7b29-497a-a1f7-efbc91e54e80.png)
 
 Интерфейс
 2. Пользовательский сценарий работы
@@ -43,102 +46,71 @@ password 	VARCHAR 	60 	NO 	Хешированный пароль
 6. HTTP запрос/ответ
 
 Запрос
-GET /register.php HTTP/1.1
-Host: test
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,/;q=0.8,application/signed-exchange;v=b3;q=0.9
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.124 YaBrowser/22.9.3.893 Yowser/2.5 Safari/537.36
+![изображение](https://user-images.githubusercontent.com/90793439/209467962-c9b975b7-8655-4d7e-bb55-04e17cc7af73.png)
 
-Ответ
-HTTP/1.1 200 OK
-Cache-Control: no-store, no-cache, must-revalidate
-Connection: Keep-Alive
-Content-Length: 1016
-Content-Type: text/html; charset=UTF-8
-Date: Fri, 14 Oct 2022 20:47:24 GMT
-Expires: Thu, 19 Nov 1981 08:52:00 GMT
-Keep-Alive: timeout=120, max=1000
-Pragma: no-cache
-Server: Apache
 7. Значимые фрагменты кода
 
-Вход в профиль
 
-    $check_user = mysqli_query($connect, "SELECT * FROM `users` WHERE `login` = '$login'");
-    if (mysqli_num_rows($check_user) === 1) {
+Отправка сообщения
 
-        $user = mysqli_fetch_assoc($check_user);
-
-        if(password_verify($password, $user['password'])) {
-            $_SESSION['user'] = [
-                "id" => $user['id'],
-                "email" => $user['email'],
-                "login" => $user['login']
-            ];
-            header('Location: ../profile.php');
-        } else {
-            $_SESSION['message'] = 'Invalid password';
-            header('Location: ../index.php');
-        }
-    } else {
-        $_SESSION['message'] = 'Invalid username';
-        header('Location: ../index.php');
+function setComments($conn) {
+    if (isset($_POST['commentSubmit'])) {
+        $uid = $_POST['uid'];
+        $date = $_POST['date'];
+        $message = $_POST['message'];
+        $likes = $_POST['likes'];
+        $dislikes = $_POST['dislikes'];
+        $file = $_FILES['img'];
+        $name = gen_str(5).".png";
+        (@copy($file["tmp_name"], __DIR__.'/img/'.$name));
+        $sql = "INSERT INTO comments (uid, date, message, likes, dislikes, image_id) VALUES ('$uid', '$date', '$message', '$likes', '$dislikes', '$name')";
+        $result = $conn->query($sql);
+        header('Location: index.php' );
     }
+}
 
-Регистрация пользователя
+Добавление лайка
 
-if (mysqli_num_rows($check_user) === 0) {
+function likeSubmit($conn,$row) {
+    if(isset($_POST[$row['cid']])) {
+        $cid = $row['cid'];
+        $likes = $row['likes']+1;
+        $query = "UPDATE comments SET likes = '$likes' WHERE cid = '$cid'";
+        $result = mysqli_query($conn, $query);
+    }
+}
 
-        if ($password === $password_confirm) {
+Вывод сообщений
 
-            if (!empty($login) || !empty($email) || !empty($password) || !empty($password_confirm)) {
-
-                if (check_pass($password)){
-
-                    if (check_email($email)){
-
-                        $password_h = password_hash($password, PASSWORD_BCRYPT);
-                        mysqli_query($connect, "INSERT INTO `users` (`id`, `login`, `email`, `password`) VALUES (NULL, '$login', '$email', '$password_h')");
-                        header('Location: ../profile.php');
-
-                    } else {
-                        header('Location: ../register.php');
-                    }
-
-                } else {
-                    header('Location: ../register.php');
+function getComments($conn){
+    $sql = "SELECT * FROM comments";
+    $result = $conn->query($sql);
+    $max_page_posts = 100;
+    $last_post = mysqli_num_rows($result);
+    $i = 0;
+    while(($row = $result->fetch_assoc())){
+        if (($last_post - $i) > $max_page_posts ){
+        }
+        else{
+            echo "<div class='comment-box'><p>";
+            echo $row['uid']."<br>";
+            echo $row['date']."<br>";
+            echo $row['message']."<br>";
+            $img_id = $row['image_id'];
+            echo "<br>";
+            if ($img_id) {
+                echo "<td><img style = 'width:390px;' src = 'img/".$img_id."' alt = 'Тут могло быть изображение'/> </td>";
                 }
-
-            } else {
-                $_SESSION['message'] = "Empty field, repeat enter";
-                header('Location: ../register.php');
-            }
-
-        } else {
-            $_SESSION['message'] = "Passwords don't match";
-            header('Location: ../register.php');
+            echo "<div>  <form method='POST' action='".likeSubmit($conn,$row)."'>  <button type='submit' name='".$row['cid']."' class='likeSubmit'>Like</button>  Likes: ".$row["likes"]."  </form></div>";
+            echo "<br>";
+            echo "<div>  <form method='POST' action='".dislikeSubmit($conn,$row)."'>  <button type='submit' name='".$row['cid']."' class='dislikeSubmit' style='  background-color: #ff0000; color: white; border: none; cursor: pointer; opacity: 0.9;'>Dislike</button>  Dislikes: ".$row["dislikes"]."  </form></div>";
+            echo "<hr>";
+            echo "<p></div>";
         }
-    } else {
-        $_SESSION['message'] = "Username already exists";
-        header('Location: ../register.php');
+        $i++;
     }
-
-Обновление пароля
-
-$login = mysqli_real_escape_string($connect,$_POST['login']);
-    $sql = mysqli_query($connect,"SELECT * FROM `users` WHERE `login`='$login' LIMIT 1");
-    if ($password === $password_confirm) {
-        if (mysqli_num_rows($sql) === 1){
-            if (check_pass($password)){
-                $new_password = password_hash($password, PASSWORD_BCRYPT);
-                $update = mysqli_query($connect,"UPDATE `users` SET  `password` = '$new_password' WHERE `login` = '$login' LIMIT 1");
-                if($update){
-                    $_SESSION['message'] = 'Password changed successfully';
-                    header('Location: ../index.php');
-                } else {
-                    $_SESSION['message'] = 'Error in data base';
-                    header('Location: ../recovery.php');
+}
 
 Вывод
 
-В ходе выполнения лабораторной работы спроектировали и разработали систему авторизации пользователей которая позволяет регистрировать пользователей, менять пароль и авторизовываться в аккаунт.
+В ходе выполнения лабораторной работы спроектировали и разработали систему сайта на котором ты можешь переписываться сам с собой. отправлять картинки и поднимать себе настроение
