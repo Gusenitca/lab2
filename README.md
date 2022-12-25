@@ -66,6 +66,7 @@ API сервера
 
 Отправка сообщения
 
+```
 function setComments($conn) {
     if (isset($_POST['commentSubmit'])) {
         $uid = $_POST['uid'];
@@ -81,9 +82,11 @@ function setComments($conn) {
         header('Location: index.php' );
     }
 }
+```
 
 Добавление лайка
 
+``` 
 function likeSubmit($conn,$row) {
     if(isset($_POST[$row['cid']])) {
         $cid = $row['cid'];
@@ -92,9 +95,11 @@ function likeSubmit($conn,$row) {
         $result = mysqli_query($conn, $query);
     }
 }
+```
 
 Вывод сообщений
 
+``` 
 function getComments($conn){
     $sql = "SELECT * FROM comments";
     $result = $conn->query($sql);
@@ -123,6 +128,7 @@ function getComments($conn){
         $i++;
     }
 }
+```
 
 Вывод
 
