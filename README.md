@@ -9,6 +9,7 @@
 ![изображение](https://user-images.githubusercontent.com/90793439/205446385-2727c064-e3bb-43de-b820-0996cef2fe04.png)
 
 1. Пользовательский интерфейс
+2. 
 ![изображение](https://user-images.githubusercontent.com/90793439/209466673-43805705-d6ad-4ebe-b2ab-62637efbc1cf.png)
 
 Форма отправки сообщений
